@@ -1,0 +1,72 @@
+from django.shortcuts import render, get_object_or_404
+from django.views.generic.edit import CreateView
+from .models import Registration, Naissances
+from django.core.urlresolvers import reverse_lazy
+from django.views import generic
+from .forms import RegistrationForm
+
+
+
+
+def get_context_data(self, **kwargs):
+        #Appelons l'instanciation de base pour récupérer le context
+        context         = super(RegistrationListView, self).get_context_data(**kwargs)
+        #Créons les données suplémentaires du context
+        context['some_data']    = 'This is just some data'
+        return context
+
+
+def index(request):
+	"""View function form home page of site."""
+
+	# Generate counts of some of the main objects
+	num_registration= Registration.objects.all().count()
+	num_birth	= Naissances.objects.all().count()
+	context = {'num_registration': num_registration,'num_birth':num_birth}
+	return render(request, 'dev/index.html', context=context)
+
+
+class  RegistrationListView(generic.ListView):
+
+	model = Registration
+	context_object_name	= 'liste_enreg'
+	queryset		= Registration.objects.all
+#	queryset		= Registration.objects.filter(last_name ='Yayi')[:5]	#Récupérer 5 naissances ayant pour nom Yayi
+	template_name		= 'dev/registrationlist.html'
+
+
+	def get_context_data(self, **kwargs):
+		#Appelons l'instanciation de base pour récupérer le context
+		context         = super(RegistrationListView, self).get_context_data(**kwargs)
+		#Créons les données suplémentaires du context
+		context['some_data']    = 'This is just some data'
+		return context
+
+
+class RegistrationDetailView(generic.DetailView):
+	model = Registration
+
+	def registration_detail_view(request, primary_key):
+		try:
+			#birth	 = Naissance.objects.gets(pk=primary_key)
+			registration	= get_object_or_404(Registration, pk=primary_key)
+		except  Registration.DoesNotExist:
+			raise Http404('Aucune naissance à ce nom')
+
+		return render(request, 'dev/registration_detail.html', context={'registration':registration})
+
+
+class RegistrationCreate(CreateView):
+    """
+    Affichage du formulaire
+    """
+    model = Registration
+    form_class = RegistrationForm
+    success_url = reverse_lazy('success')
+
+
+def registration_success(request):
+    """
+    Message de confirmation
+    """
+    return render(request, 'registration_success.html')
